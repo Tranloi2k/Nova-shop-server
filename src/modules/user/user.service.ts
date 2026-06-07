@@ -11,6 +11,10 @@ abstract class BaseUserService {
   abstract findUserByEmail(email: string): Promise<User | null>;
   abstract findUserById(id: number): Promise<User | null>;
   abstract updateUser(id: number, updates: Partial<User>): Promise<User | null>;
+  abstract updateUserProfile(
+    id: number,
+    updates: { username?: string; email?: string; password?: string },
+  ): Promise<User | null>;
   abstract deleteUser(id: number): Promise<void>;
 }
 @Injectable()
@@ -49,6 +53,24 @@ export class UserService extends BaseUserService {
   async updateUser(id: number, updates: Partial<User>): Promise<User | null> {
     await this.userRepository.update(id, updates);
     return this.userRepository.findOne({ where: { id } });
+  }
+
+  // Cập nhật thông tin profile người dùng (hỗ trợ hash password nếu có)
+  async updateUserProfile(
+    id: number,
+    updates: { username?: string; email?: string; password?: string },
+  ): Promise<User | null> {
+    const dataToUpdate: Partial<User> = {};
+    if (updates.username) {
+      dataToUpdate.username = updates.username;
+    }
+    if (updates.email) {
+      dataToUpdate.email = updates.email;
+    }
+    if (updates.password) {
+      dataToUpdate.password = await this.hashPassword(updates.password);
+    }
+    return this.updateUser(id, dataToUpdate);
   }
 
   // Xóa người dùng

@@ -16,11 +16,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
   ) {
     super({
-      // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
         (request: Request) => {
-          console.log('Request Cookies:', request.cookies.access_token); // Kiểm tra cookies trong request
-          return request?.cookies?.access_token; // Lấy token từ cookies
+          console.log('Request Cookies:', request?.cookies?.access_token);
+          return request?.cookies?.access_token;
         },
       ]),
       ignoreExpiration: false,

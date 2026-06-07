@@ -10,7 +10,7 @@ async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(cookieParser());
   const configService = app.get(ConfigService);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
   const allowedOrigins = configService.get<string>('ALLOWED_ORIGINS')?.split(',');
 
   app.enableCors({

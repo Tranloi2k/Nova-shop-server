@@ -1,8 +1,21 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/user.dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { ApiOperation, ApiResponse, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../guard/jwt-auth.guard';
 
+@ApiTags('user')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -21,5 +34,51 @@ export class UserController {
     );
 
     return { message: 'Create user successful' };
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  async getProfile(@Param('id') id: string, @Req() req: { user: { id: number } }) {
+    if (Number(req.user.id) !== Number(id)) {
+      throw new UnauthorizedException('You can only access your own profile');
+    }
+    const user = await this.userService.findUserById(Number(id));
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const profile: Record<string, unknown> = { ...user };
+    delete profile.password;
+    delete profile.refreshToken;
+    return profile;
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({ status: 200, description: 'User profile updated successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: { user: { id: number } },
+  ) {
+    if (Number(req.user.id) !== Number(id)) {
+      throw new UnauthorizedException('You can only update your own profile');
+    }
+    const updatedUser = await this.userService.updateUserProfile(Number(id), updateUserDto);
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+    const profile: Record<string, unknown> = { ...updatedUser };
+    delete profile.password;
+    delete profile.refreshToken;
+    return profile;
   }
 }

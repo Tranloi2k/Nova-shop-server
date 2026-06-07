@@ -40,10 +40,9 @@ export class ProductsService {
     const { search, category, minPrice, maxPrice, onSale } = filters;
 
     if (search?.trim()) {
-      queryBuilder.andWhere(
-        '(product.name LIKE :search OR product.description LIKE :search)',
-        { search: `%${search.trim()}%` },
-      );
+      queryBuilder.andWhere('(product.name LIKE :search OR product.description LIKE :search)', {
+        search: `%${search.trim()}%`,
+      });
     }
 
     if (category && CATEGORY_KEYWORDS[category as keyof typeof CATEGORY_KEYWORDS]) {
@@ -148,10 +147,7 @@ export class ProductsService {
 
     if (sortInMemory) {
       const products = await queryBuilder.getMany();
-      productsWithRating = this.sortProducts(
-        this.mapProductsWithStats(products),
-        sort,
-      );
+      productsWithRating = this.sortProducts(this.mapProductsWithStats(products), sort);
     } else {
       const total = await queryBuilder.getCount();
       const products = await queryBuilder.skip(skip).take(limit).getMany();

@@ -10,11 +10,7 @@ export const PRODUCT_SORT_VALUES = [
   'newest',
 ] as const;
 
-export const PRODUCT_CATEGORY_VALUES = [
-  'smartphones',
-  'tablets',
-  'wearables',
-] as const;
+export const PRODUCT_CATEGORY_VALUES = ['smartphones', 'tablets', 'wearables'] as const;
 
 export class QueryProductDto {
   @ApiPropertyOptional({ description: 'Search by product name', example: 'iPhone' })
