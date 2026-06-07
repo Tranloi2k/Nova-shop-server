@@ -19,12 +19,26 @@ import { OrderModule } from './modules/order/order.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: configService.get<string>('DATABASE'),
-        entities: ['dist/**/*.entity{.ts,.js}'],
-        synchronize: false,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: ['dist/**/*.entity{.ts,.js}'],
+            synchronize: false,
+            ssl: {
+              rejectUnauthorized: false,
+            },
+          };
+        }
+        return {
+          type: 'sqlite',
+          database: configService.get<string>('DATABASE') || 'database.sqlite',
+          entities: ['dist/**/*.entity{.ts,.js}'],
+          synchronize: false,
+        };
+      },
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
