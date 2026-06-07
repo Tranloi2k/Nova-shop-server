@@ -5,26 +5,12 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
 
-abstract class BaseUserService {
-  constructor() {}
-  abstract createUser(username: string, email: string, password: string): Promise<User>;
-  abstract findUserByEmail(email: string): Promise<User | null>;
-  abstract findUserById(id: number): Promise<User | null>;
-  abstract updateUser(id: number, updates: Partial<User>): Promise<User | null>;
-  abstract updateUserProfile(
-    id: number,
-    updates: { username?: string; email?: string; password?: string },
-  ): Promise<User | null>;
-  abstract deleteUser(id: number): Promise<void>;
-}
 @Injectable()
-export class UserService extends BaseUserService {
+export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {
-    super();
-  }
+  ) {}
 
   private async hashPassword(password: string): Promise<string> {
     const saltRounds = 10; // Số vòng lặp để tạo salt
@@ -39,8 +25,15 @@ export class UserService extends BaseUserService {
     return this.userRepository.save(user);
   }
 
-  // Tìm người dùng theo email
-  async findUserByEmail(email: string): Promise<User | null> {
+  // Tìm người dùng theo email (hỗ trợ load password khi cần validate credentials)
+  async findUserByEmail(email: string, selectPassword = false): Promise<User | null> {
+    if (selectPassword) {
+      return this.userRepository
+        .createQueryBuilder('user')
+        .where('user.email = :email', { email })
+        .addSelect('user.password')
+        .getOne();
+    }
     return this.userRepository.findOne({ where: { email } });
   }
 

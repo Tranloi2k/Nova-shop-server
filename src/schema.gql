@@ -95,6 +95,5 @@ type User {
   carts: [Cart!]
   email: String!
   id: Float!
-  password: String!
   username: String!
 }

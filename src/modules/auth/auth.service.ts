@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 
 import { UserService } from '../user/user.service';
@@ -18,8 +16,9 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {
-    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    this.googleClient = new OAuth2Client(this.configService.get<string>('GOOGLE_CLIENT_ID'));
   }
 
   /*
@@ -32,7 +31,8 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<Omit<LoginResponseDto, 'password'> | null> {
-    const user = await this.userService.findUserByEmail(email);
+    // Chỉ định rõ ràng selectPassword = true để lấy password hash từ DB phục vụ validate
+    const user = await this.userService.findUserByEmail(email, true);
     if (user && (await bcrypt.compare(password, user.password))) {
       return removeKeyObject(user, 'password');
     }
@@ -62,7 +62,7 @@ export class AuthService {
         sub: userId,
       },
       {
-        secret: process.env.JWT_ACCESS_SECRET,
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET') || this.configService.get<string>('JWT_SECRET'),
         expiresIn: '15m',
       },
     );
@@ -75,7 +75,7 @@ export class AuthService {
         sub: userId,
       },
       {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
         expiresIn: '7d',
       },
     );
@@ -118,7 +118,7 @@ export class AuthService {
         sub: number;
         username: string;
       }>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
       });
 
       const user = await this.userService.findUserById(payload.sub);
@@ -154,7 +154,7 @@ export class AuthService {
   async googleLogin(googleToken: string) {
     const ticket = await this.googleClient.verifyIdToken({
       idToken: googleToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
     });
 
     const payload = ticket.getPayload() as TokenPayload;
@@ -166,7 +166,9 @@ export class AuthService {
     let user = await this.userService.findUserByEmail(payload.email);
 
     if (!user) {
-      user = await this.userService.createUser(payload.name, payload.email, '');
+      // Tạo mật khẩu ngẫu nhiên có độ bảo mật cao để tránh lỗi đăng nhập mật khẩu trống
+      const randomSecurePassword = crypto.randomBytes(32).toString('hex');
+      user = await this.userService.createUser(payload.name, payload.email, randomSecurePassword);
     }
 
     return this.login(user.username, user.id);

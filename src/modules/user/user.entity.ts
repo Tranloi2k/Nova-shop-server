@@ -17,8 +17,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Field()
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @Column()

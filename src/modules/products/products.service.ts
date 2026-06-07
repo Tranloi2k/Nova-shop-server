@@ -5,6 +5,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto, PRODUCT_CATEGORY_VALUES } from './dto/query-product.dto';
 import { PaginatedProductResponseDto } from './dto/paginated-product-response.dto';
 import { Product } from './entities/product.entity';
+import { Review } from '../reviews/entities/review.entity';
 
 const CATEGORY_KEYWORDS: Record<(typeof PRODUCT_CATEGORY_VALUES)[number], string[]> = {
   smartphones: ['iphone', 'galaxy', 'pixel', 'phone', 'smartphone', 'oneplus', 'xiaomi'],
@@ -118,7 +119,6 @@ export class ProductsService {
 
     const filterParams = { search, category, minPrice, maxPrice, onSale };
     const skip = (page - 1) * limit;
-    const sortInMemory = sort === 'popular' || sort === 'rating';
 
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
@@ -126,52 +126,51 @@ export class ProductsService {
 
     this.applyProductFilters(queryBuilder, filterParams);
 
-    if (!sortInMemory) {
-      switch (sort) {
-        case 'price-low':
-          queryBuilder.orderBy('product.price', 'ASC');
-          break;
-        case 'price-high':
-          queryBuilder.orderBy('product.price', 'DESC');
-          break;
-        case 'newest':
-        default:
-          queryBuilder.orderBy('product.id', 'DESC');
-          break;
-      }
-    } else {
-      queryBuilder.orderBy('product.id', 'DESC');
+    // Thêm các trường select ảo tính toán từ subquery để sắp xếp ở DB
+    queryBuilder.addSelect((subQuery) => {
+      return subQuery
+        .select('COALESCE(AVG(r.rating), 0)', 'avg_rating')
+        .from(Review, 'r')
+        .where('r.productId = product.id');
+    }, 'product_average_rating');
+
+    queryBuilder.addSelect((subQuery) => {
+      return subQuery
+        .select('COUNT(r.id)', 'reviews_count')
+        .from(Review, 'r')
+        .where('r.productId = product.id');
+    }, 'product_reviews_count');
+
+    // Xử lý sắp xếp (Sorting) trực tiếp ở tầng database (SQL Level)
+    switch (sort) {
+      case 'price-low':
+        queryBuilder.orderBy('product.price', 'ASC').addOrderBy('product.id', 'DESC');
+        break;
+      case 'price-high':
+        queryBuilder.orderBy('product.price', 'DESC').addOrderBy('product.id', 'DESC');
+        break;
+      case 'newest':
+        queryBuilder.orderBy('product.id', 'DESC');
+        break;
+      case 'rating':
+        queryBuilder.orderBy('product_average_rating', 'DESC').addOrderBy('product.id', 'DESC');
+        break;
+      case 'popular':
+      default:
+        queryBuilder.orderBy('product_reviews_count', 'DESC').addOrderBy('product.id', 'DESC');
+        break;
     }
 
-    let productsWithRating: ProductWithStats[];
+    // Thực hiện truy vấn phân trang trực tiếp từ Database
+    const total = await queryBuilder.getCount();
+    const products = await queryBuilder.skip(skip).take(limit).getMany();
 
-    if (sortInMemory) {
-      const products = await queryBuilder.getMany();
-      productsWithRating = this.sortProducts(this.mapProductsWithStats(products), sort);
-    } else {
-      const total = await queryBuilder.getCount();
-      const products = await queryBuilder.skip(skip).take(limit).getMany();
-      productsWithRating = this.mapProductsWithStats(products);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        products: productsWithRating,
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      };
-    }
-
-    const total = productsWithRating.length;
-    const paginatedProducts = productsWithRating.slice(skip, skip + limit);
+    // Map thêm thông tin ảo rate & reviewCount cho các sản phẩm đã phân trang
+    const productsWithRating = this.mapProductsWithStats(products);
     const totalPages = Math.ceil(total / limit);
 
     return {
-      products: paginatedProducts,
+      products: productsWithRating,
       total,
       page,
       limit,

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -38,9 +39,10 @@ export class CartController {
     description: 'Cart retrieved successfully',
     type: CartResponseDto,
   })
-  @ApiQuery({ name: 'userId', required: false, description: 'Search by product name' })
-  async getCart(@Query() queryDto: { userId: string }): Promise<CartResponseDto> {
-    return this.cartService.getCart(Number(queryDto.userId));
+  async getCart(
+    @Request() req: Request & { user: { id: number } },
+  ): Promise<CartResponseDto> {
+    return this.cartService.getCart(Number(req.user.id));
   }
 
   @Post('add')

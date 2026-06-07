@@ -12,6 +12,7 @@ import { UserModule } from './modules/user/user.module';
 import { CartModule } from './modules/cart/cart.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SignalingGateway } from './modules/videoCall/signaling.gateway';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { SignalingGateway } from './modules/videoCall/signaling.gateway';
     AuthModule,
     UserModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, SignalingGateway],
