@@ -82,8 +82,9 @@ export class OrderService {
         // Xóa tất cả các cart items trong transaction
         await manager.remove(CartItem, cart.items);
 
-        // Reset tổng số lượng trong cart về 0
+        // Reset tổng số lượng trong cart về 0 và xóa tham chiếu items để tránh cascade save tự động lưu lại chúng
         cart.quantity = 0;
+        cart.items = [];
         await manager.save(Cart, cart);
 
         return this.mapOrderToDto(savedOrder);
