@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -66,6 +66,23 @@ export class OrderService {
         }
 
         for (const cartItem of cart.items) {
+          // Decrement product stock atomically and verify sufficient stock
+          const updateResult = await manager
+            .createQueryBuilder()
+            .update(Product)
+            .set({ stock: () => `stock - ${cartItem.quantity}` })
+            .where('id = :id AND stock >= :quantity', {
+              id: cartItem.productId,
+              quantity: cartItem.quantity,
+            })
+            .execute();
+
+          if (updateResult.affected === 0) {
+            throw new BadRequestException(
+              `Product "${cartItem.product.name}" has insufficient stock or is unavailable`,
+            );
+          }
+
           const orderItem = manager.create(OrderItem, {
             productId: cartItem.productId,
             productName: cartItem.product.name,
@@ -94,6 +111,29 @@ export class OrderService {
           throw new NotFoundException('Product ID is required for direct purchase');
         }
 
+        const quantity = dto.quantity || 1;
+
+        // Decrement product stock atomically and verify sufficient stock
+        const updateResult = await manager
+          .createQueryBuilder()
+          .update(Product)
+          .set({ stock: () => `stock - ${quantity}` })
+          .where('id = :id AND stock >= :quantity', {
+            id: dto.productId,
+            quantity,
+          })
+          .execute();
+
+        if (updateResult.affected === 0) {
+          const product = await manager.findOne(Product, { where: { id: dto.productId } });
+          if (!product) {
+            throw new NotFoundException(`Product with ID ${dto.productId} not found`);
+          }
+          throw new BadRequestException(
+            `Product "${product.name}" has insufficient stock or is unavailable`,
+          );
+        }
+
         const product = await manager.findOne(Product, { where: { id: dto.productId } });
         if (!product) {
           throw new NotFoundException(`Product with ID ${dto.productId} not found`);
@@ -104,7 +144,7 @@ export class OrderService {
           productName: product.name,
           productImage: product.image,
           price: product.price,
-          quantity: dto.quantity || 1,
+          quantity,
         });
 
         order.items = [orderItem];
