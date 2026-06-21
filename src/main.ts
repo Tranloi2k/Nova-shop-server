@@ -47,6 +47,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document); // Truy cập Swagger UI tại /api
 
-  await app.listen(5000);
+  const port = Number(process.env.PORT) || 5000;
+  await app.listen(port);
 }
 bootstrap();

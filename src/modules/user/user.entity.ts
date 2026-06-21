@@ -26,7 +26,7 @@ export class User {
   @Column()
   refreshToken: string;
 
-  @Field()
+  @Field(() => UserRole)
   @Column({ type: 'varchar', default: UserRole.Customer })
   role: UserRole;
 

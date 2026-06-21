@@ -48,9 +48,12 @@ import { ThrottlerModule } from '@nestjs/throttler';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'), // Tự động tạo file schema
-      sortSchema: true, // Sắp xếp schema
-      playground: process.env.NODE_ENV !== 'production', // Bật GraphQL Playground chỉ khi không phải production
+      autoSchemaFile:
+        process.env.NODE_ENV === 'production'
+          ? join(process.cwd(), 'dist/schema.gql')
+          : join(process.cwd(), 'src/schema.gql'),
+      sortSchema: true,
+      playground: process.env.NODE_ENV !== 'production',
     }),
     ConfigModule.forRoot({
       isGlobal: true, // Làm cho ConfigModule có sẵn ở mọi nơi trong ứng dụng
