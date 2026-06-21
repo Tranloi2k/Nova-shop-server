@@ -7,8 +7,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
-import { Cart } from './cart.entity';
+import type { Cart } from './cart.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
+
+const CartEntity = (): typeof Cart => require('./cart.entity').Cart;
 
 @ObjectType()
 @Entity('cart_items')
@@ -33,8 +35,8 @@ export class CartItem {
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
-  @Field(() => Cart)
-  @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: 'CASCADE' })
+  @Field(() => CartEntity())
+  @ManyToOne(CartEntity, (cart: Cart) => cart.items, { onDelete: 'CASCADE' })
   cart: Cart;
 
   @Field(() => Product)

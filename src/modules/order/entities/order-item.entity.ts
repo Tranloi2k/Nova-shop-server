@@ -1,6 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Order } from './order.entity';
+import type { Order } from './order.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
+
+const OrderEntity = (): typeof Order => require('./order.entity').Order;
 
 @Entity('order_items')
 export class OrderItem {
@@ -25,7 +27,7 @@ export class OrderItem {
   @Column()
   quantity: number;
 
-  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
+  @ManyToOne(OrderEntity, (order: Order) => order.items, { onDelete: 'CASCADE' })
   order: Order;
 
   @ManyToOne(() => Product, { eager: true, nullable: true })

@@ -1,6 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Review } from 'src/modules/reviews/entities/review.entity';
+import type { Review } from 'src/modules/reviews/entities/review.entity';
+
+const ReviewEntity = (): typeof Review =>
+  require('../../reviews/entities/review.entity').Review;
 
 @ObjectType() // Đánh dấu class là một GraphQL Object Type
 @Entity('Products')
@@ -49,7 +52,7 @@ export class Product {
   @Column({ type: 'text', nullable: true }) // Sử dụng kiểu text để lưu JSON dưới dạng chuỗi
   detailInformation: string;
 
-  @Field(() => [Review], { name: 'reviews' }) // Đánh dấu quan hệ với Review
-  @OneToMany(() => Review, (reviews) => reviews.product) // Quan hệ 1-nhiều với Review
+  @Field(() => [ReviewEntity()], { name: 'reviews' })
+  @OneToMany(ReviewEntity, (reviews: Review) => reviews.product)
   reviews: Review[];
 }

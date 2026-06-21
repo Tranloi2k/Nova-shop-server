@@ -9,7 +9,9 @@ import {
 } from 'typeorm';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { User } from 'src/modules/user/user.entity';
-import { CartItem } from './cart-item.entity';
+import type { CartItem } from './cart-item.entity';
+
+const CartItemEntity = (): typeof CartItem => require('./cart-item.entity').CartItem;
 
 @ObjectType()
 @Entity('carts')
@@ -30,8 +32,8 @@ export class Cart {
   @ManyToOne(() => User, (user) => user.carts)
   user: User;
 
-  @Field(() => [CartItem])
-  @OneToMany(() => CartItem, (cartItem) => cartItem.cart, { cascade: true })
+  @Field(() => [CartItemEntity()])
+  @OneToMany(CartItemEntity, (cartItem: CartItem) => cartItem.cart, { cascade: true })
   items: CartItem[];
 
   @Field()
