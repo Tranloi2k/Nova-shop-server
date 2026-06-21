@@ -10,7 +10,7 @@ This project provides a comprehensive feature set for user authentication, produ
 
 * **Framework:** [NestJS](https://nestjs.com) (v11) - a progressive Node.js framework.
 * **API Architectures:** Mixed **REST API** (with OpenAPI/Swagger documentation) & **GraphQL API** (Apollo Driver).
-* **Database & ORM:** SQLite database with [TypeORM](https://typeorm.io) for data persistence.
+* **Database & ORM:** PostgreSQL (Supabase) with [TypeORM](https://typeorm.io) for data persistence.
 * **Authentication:** JWT Access & Refresh Token rotation, Local authentication strategy (bcrypt), and Google OAuth2 integration.
 * **Real-time Signaling:** Socket.io WebSockets for WebRTC video call signaling.
 * **Linting & Formatting:** ESLint & Prettier.
@@ -51,14 +51,12 @@ This project provides a comprehensive feature set for user authentication, produ
 Create a `.env` file in the root directory and configure the following variables:
 
 ```env
-DATABASE=database.sqlite
-JWT_SECRET=your_jwt_secret_key
+DATABASE_URL=postgresql://user:password@host:5432/dbname
 JWT_ACCESS_SECRET=your_access_token_secret
 JWT_REFRESH_SECRET=your_refresh_token_secret
-JWT_EXPIRES_IN=1h
-ALLOWED_ORIGINS=http://localhost,http://localhost:3000,http://localhost:8080
+INTERNAL_WEBHOOK_SECRET=your_internal_webhook_secret
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 ---

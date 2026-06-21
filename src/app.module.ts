@@ -29,22 +29,20 @@ import { ThrottlerModule } from '@nestjs/throttler';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
-        if (databaseUrl) {
-          return {
-            type: 'postgres',
-            url: databaseUrl,
-            entities: ['dist/**/*.entity{.ts,.js}'],
-            synchronize: false,
-            ssl: {
-              rejectUnauthorized: false,
-            },
-          };
+        if (!databaseUrl) {
+          throw new Error(
+            'DATABASE_URL is required — set your Supabase/PostgreSQL connection string in .env',
+          );
         }
+
         return {
-          type: 'sqlite',
-          database: configService.get<string>('DATABASE') || 'database.sqlite',
+          type: 'postgres',
+          url: databaseUrl,
           entities: ['dist/**/*.entity{.ts,.js}'],
           synchronize: false,
+          ssl: {
+            rejectUnauthorized: false,
+          },
         };
       },
     }),

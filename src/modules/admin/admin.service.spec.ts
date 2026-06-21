@@ -57,7 +57,7 @@ describe('AdminService', () => {
         }),
       }),
       options: {
-        type: 'sqlite',
+        type: 'postgres',
       },
     };
 

@@ -379,8 +379,7 @@ export class AdminService {
     startDate.setDate(startDate.getDate() - days + 1);
     startDate.setHours(0, 0, 0, 0);
 
-    const isPostgres = this.dataSource.options.type === 'postgres';
-    const dateSelect = isPostgres ? 'DATE(order.createdAt)' : 'date(order.createdAt)';
+    const dateSelect = 'DATE(order.createdAt)';
 
     const raw = await this.orderRepository.createQueryBuilder('order')
       .select(dateSelect, 'date')
@@ -388,7 +387,7 @@ export class AdminService {
       .addSelect('COUNT(order.id)', 'orders')
       .where('order.status = :status', { status: 'delivered' })
       .andWhere('order.createdAt >= :startDate', { startDate })
-      .groupBy(isPostgres ? 'DATE(order.createdAt)' : 'date(order.createdAt)')
+      .groupBy('DATE(order.createdAt)')
       .orderBy('date', 'ASC')
       .getRawMany();
 
