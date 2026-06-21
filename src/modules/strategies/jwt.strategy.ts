@@ -8,6 +8,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { ConfigService } from '@nestjs/config';
+import { getJwtAccessSecret, JwtTokenType } from '../../config/jwt.config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -24,14 +25,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'), // Thay thế bằng secret key thực tế
+      secretOrKey: getJwtAccessSecret(configService),
     });
   }
 
-  async validate(payload: any) {
-    console.log('--------------------------', payload);
+  async validate(payload: { sub: number; type?: JwtTokenType }) {
+    if (payload.type !== 'access') {
+      throw new UnauthorizedException('Invalid access token');
+    }
+
     const user = await this.authService.validateUserById(payload.sub);
-    console.log('User from JWT payload:', user);
     if (!user) {
       throw new UnauthorizedException('Invalid token');
     }

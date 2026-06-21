@@ -1,5 +1,5 @@
-// user.service.ts
 import { Injectable } from '@nestjs/common';
+import { UserRole } from './user-role.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -22,6 +22,18 @@ export class UserService {
   async createUser(username: string, email: string, password: string): Promise<User> {
     const hashPassword = await this.hashPassword(password);
     const user = this.userRepository.create({ username, email, password: hashPassword });
+    return this.userRepository.save(user);
+  }
+
+  // Tạo người dùng mới với role chỉ định
+  async createUserWithRole(
+    username: string,
+    email: string,
+    password: string,
+    role: UserRole,
+  ): Promise<User> {
+    const hashPassword = await this.hashPassword(password);
+    const user = this.userRepository.create({ username, email, password: hashPassword, role });
     return this.userRepository.save(user);
   }
 

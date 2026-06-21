@@ -8,6 +8,12 @@ import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { UserService } from '../user/user.service';
 import removeKeyObject from '../helpers';
 import { LoginResponseDto } from './dto/auth.dto';
+import {
+  getJwtAccessSecret,
+  getJwtRefreshSecret,
+  JwtTokenType,
+} from '../../config/jwt.config';
+import { UserRole } from '../user/user-role.enum';
 
 @Injectable()
 export class AuthService {
@@ -60,9 +66,10 @@ export class AuthService {
       {
         username,
         sub: userId,
+        type: 'access' satisfies JwtTokenType,
       },
       {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET') || this.configService.get<string>('JWT_SECRET'),
+        secret: getJwtAccessSecret(this.configService),
         expiresIn: '15m',
       },
     );
@@ -73,9 +80,10 @@ export class AuthService {
       {
         username,
         sub: userId,
+        type: 'refresh' satisfies JwtTokenType,
       },
       {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
+        secret: getJwtRefreshSecret(this.configService),
         expiresIn: '7d',
       },
     );
@@ -117,9 +125,14 @@ export class AuthService {
       const payload = this.jwtService.verify<{
         sub: number;
         username: string;
+        type?: JwtTokenType;
       }>(refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
+        secret: getJwtRefreshSecret(this.configService),
       });
+
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
 
       const user = await this.userService.findUserById(payload.sub);
 
@@ -172,5 +185,14 @@ export class AuthService {
     }
 
     return this.login(user.username, user.id);
+  }
+
+  async seedAdmin() {
+    const adminEmail = 'admin@novashop.com';
+    let user = await this.userService.findUserByEmail(adminEmail);
+    if (!user) {
+      user = await this.userService.createUserWithRole('admin', adminEmail, 'admin123', UserRole.Admin);
+    }
+    return removeKeyObject(user, 'password');
   }
 }

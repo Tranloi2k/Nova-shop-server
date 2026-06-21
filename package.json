@@ -32,6 +32,7 @@
     "@nestjs/platform-socket.io": "^11.0.12",
     "@nestjs/platform-ws": "^11.0.12",
     "@nestjs/swagger": "^11.0.6",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.0.12",
     "apollo-server-express": "^3.13.0",
@@ -90,6 +91,9 @@
       "ts"
     ],
     "rootDir": "src",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    },
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

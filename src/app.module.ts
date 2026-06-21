@@ -13,9 +13,17 @@ import { CartModule } from './modules/cart/cart.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SignalingGateway } from './modules/videoCall/signaling.gateway';
 import { OrderModule } from './modules/order/order.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 100,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -56,6 +64,7 @@ import { OrderModule } from './modules/order/order.module';
     UserModule,
     CartModule,
     OrderModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, SignalingGateway],

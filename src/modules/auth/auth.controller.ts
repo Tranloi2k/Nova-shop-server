@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Res, UnauthorizedException, Req, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { GetNewTokenDto, LoginDto } from './dto/auth.dto';
@@ -9,6 +10,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
     // async login(@Body() loginDto: LoginDto) {
     console.log('Login DTO:----------------');
@@ -27,7 +30,8 @@ export class AuthController {
   }
 
   @Post('token')
-  // async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async token(@Body() getNewTokenDto: GetNewTokenDto) {
     const data = await this.authService.refreshToken(getNewTokenDto.refreshToken);
     if (!data) {
@@ -52,8 +56,16 @@ export class AuthController {
   }
 
   @Post('/google')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async googleAuthCallback(@Body('idToken') idToken: string) {
     const code = await this.authService.googleLogin(idToken);
     return { ...code };
+  }
+
+  @Post('/auth/seed-admin')
+  async seedAdmin() {
+    const user = await this.authService.seedAdmin();
+    return { message: 'Seed admin user successful', user };
   }
 }

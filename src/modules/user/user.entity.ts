@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { Cart } from 'src/modules/cart/entities/cart.entity';
+import { UserRole } from './user-role.enum';
 
 @ObjectType() // Đánh dấu class là một GraphQL Object Type
 @Entity('users')
@@ -24,8 +25,8 @@ export class User {
   refreshToken: string;
 
   @Field()
-  @Column({ default: 'customer' })
-  role: string;
+  @Column({ type: 'varchar', default: UserRole.Customer })
+  role: UserRole;
 
   @Field(() => [Cart], { nullable: true })
   @OneToMany(() => Cart, (cart) => cart.user)
