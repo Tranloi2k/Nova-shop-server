@@ -23,6 +23,10 @@ export class User {
   @Column()
   refreshToken: string;
 
+  @Field()
+  @Column({ default: 'customer' })
+  role: string;
+
   @Field(() => [Cart], { nullable: true })
   @OneToMany(() => Cart, (cart) => cart.user)
   carts: Cart[];

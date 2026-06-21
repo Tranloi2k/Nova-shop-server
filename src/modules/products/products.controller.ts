@@ -6,6 +6,8 @@ import { PaginatedProductResponseDto } from './dto/paginated-product-response.dt
 // import { UpdateProductDto } from './dto/update-product.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guard/jwt-auth.guard';
+import { RolesGuard } from '../guard/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { Product } from './entities/product.entity';
 
 @ApiTags('products')
@@ -14,9 +16,10 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new product (authenticated)' })
+  @ApiOperation({ summary: 'Create a new product (admin only)' })
   @ApiResponse({
     status: 201,
     description: 'The product has been successfully created.',
@@ -67,9 +70,10 @@ export class ProductsController {
   //   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a product by ID (authenticated)' })
+  @ApiOperation({ summary: 'Delete a product by ID (admin only)' })
   @ApiResponse({
     status: 200,
     description: 'The product has been successfully deleted.',

@@ -47,7 +47,7 @@ export class OrderService {
       const order = manager.create(Order, {
         userId,
         stripeSessionId: dto.stripeSessionId,
-        total: dto.total,
+        total: 0,
         status: 'processing',
         items: [],
       });
@@ -65,6 +65,7 @@ export class OrderService {
           throw new NotFoundException('Active cart is empty or not found');
         }
 
+        let computedTotal = 0;
         for (const cartItem of cart.items) {
           // Decrement product stock atomically and verify sufficient stock
           const updateResult = await manager
@@ -83,6 +84,13 @@ export class OrderService {
             );
           }
 
+          const itemTotal = Number(cartItem.price) * cartItem.quantity;
+          let itemDiscount = 0;
+          if (cartItem.product.discount > 0) {
+            itemDiscount = (itemTotal * cartItem.product.discount) / 100;
+          }
+          computedTotal += (itemTotal - itemDiscount);
+
           const orderItem = manager.create(OrderItem, {
             productId: cartItem.productId,
             productName: cartItem.product.name,
@@ -94,6 +102,7 @@ export class OrderService {
         }
 
         order.items = orderItems;
+        order.total = computedTotal;
         const savedOrder = await manager.save(Order, order);
 
         // Xóa tất cả các cart items trong transaction
@@ -139,6 +148,13 @@ export class OrderService {
           throw new NotFoundException(`Product with ID ${dto.productId} not found`);
         }
 
+        const itemTotal = Number(product.price) * quantity;
+        let itemDiscount = 0;
+        if (product.discount > 0) {
+          itemDiscount = (itemTotal * product.discount) / 100;
+        }
+        const computedTotal = itemTotal - itemDiscount;
+
         const orderItem = manager.create(OrderItem, {
           productId: product.id,
           productName: product.name,
@@ -148,6 +164,7 @@ export class OrderService {
         });
 
         order.items = [orderItem];
+        order.total = computedTotal;
         const savedOrder = await manager.save(Order, order);
 
         return this.mapOrderToDto(savedOrder);

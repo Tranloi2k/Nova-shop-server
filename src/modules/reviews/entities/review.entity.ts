@@ -17,6 +17,10 @@ export class Review {
   @Column()
   name: string;
 
+  @Field(() => Int, { nullable: true })
+  @Column({ nullable: true })
+  userId: number;
+
   @Field(() => Int)
   @Column()
   rating: number;

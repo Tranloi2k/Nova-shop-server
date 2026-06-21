@@ -71,10 +71,11 @@ type Product {
 }
 
 type Query {
+  findOneReview(id: Int!): Review!
   getCart: Cart!
   product(id: Float!): Product!
   products: [Product!]!
-  reviews(id: Int!): Review!
+  reviews: [Review!]!
 }
 
 type Review {
@@ -84,6 +85,7 @@ type Review {
   name: String!
   product: Product!
   rating: Int!
+  userId: Int
 }
 
 input UpdateReviewInput {
@@ -96,5 +98,6 @@ type User {
   carts: [Cart!]
   email: String!
   id: Float!
+  role: String!
   username: String!
 }

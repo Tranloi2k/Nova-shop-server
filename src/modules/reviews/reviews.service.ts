@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
@@ -22,17 +22,37 @@ export class ReviewService {
     return this.reviewRepository.findOne({ where: { id }, relations: ['product'] });
   }
 
-  async create(createReviewInput: CreateReviewInput): Promise<Review> {
-    const review = this.reviewRepository.create(createReviewInput);
+  async create(createReviewInput: CreateReviewInput, user: any): Promise<Review> {
+    const { productId, ...rest } = createReviewInput;
+    const review = this.reviewRepository.create({
+      ...rest,
+      product: { id: productId } as any,
+      userId: user.id,
+      name: user.username,
+    });
     return this.reviewRepository.save(review);
   }
 
-  async update(id: number, updateReviewInput: UpdateReviewInput): Promise<Review | null> {
+  async update(id: number, updateReviewInput: UpdateReviewInput, user: any): Promise<Review | null> {
+    const review = await this.reviewRepository.findOne({ where: { id } });
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
+    if (review.userId !== user.id) {
+      throw new ForbiddenException('You are not authorized to update this review');
+    }
     await this.reviewRepository.update(id, updateReviewInput);
     return this.reviewRepository.findOne({ where: { id } });
   }
 
-  async remove(id: number): Promise<boolean> {
+  async remove(id: number, user: any): Promise<boolean> {
+    const review = await this.reviewRepository.findOne({ where: { id } });
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
+    if (review.userId !== user.id && user.role !== 'admin') {
+      throw new ForbiddenException('You are not authorized to delete this review');
+    }
     await this.reviewRepository.delete(id);
     return true;
   }

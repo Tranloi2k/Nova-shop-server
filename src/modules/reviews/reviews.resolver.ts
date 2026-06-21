@@ -1,7 +1,10 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { ReviewService } from './reviews.service';
 import { Review } from './entities/review.entity';
 import { CreateReviewInput, UpdateReviewInput } from './dto/review.input';
+import { JwtAuthGuard } from '../guard/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Resolver(() => Review)
 export class ReviewResolver {
@@ -12,23 +15,35 @@ export class ReviewResolver {
     return this.reviewService.findAll();
   }
 
-  @Query(() => Review, { name: 'reviews' })
+  @Query(() => Review, { name: 'findOneReview' })
   findOne(@Args('id', { type: () => Int }) id: number) {
     return this.reviewService.findOne(id);
   }
 
   @Mutation(() => Review, { name: 'createReview' })
-  create(@Args('createReviewInput') createReviewInput: CreateReviewInput) {
-    return this.reviewService.create(createReviewInput);
+  @UseGuards(JwtAuthGuard)
+  create(
+    @Args('createReviewInput') createReviewInput: CreateReviewInput,
+    @CurrentUser() user: any,
+  ) {
+    return this.reviewService.create(createReviewInput, user);
   }
 
   @Mutation(() => Review, { name: 'updateReview' })
-  update(@Args('updateReviewInput') updateReviewInput: UpdateReviewInput) {
-    return this.reviewService.update(updateReviewInput.id, updateReviewInput);
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Args('updateReviewInput') updateReviewInput: UpdateReviewInput,
+    @CurrentUser() user: any,
+  ) {
+    return this.reviewService.update(updateReviewInput.id, updateReviewInput, user);
   }
 
   @Mutation(() => Boolean, { name: 'deleteReview' })
-  delete(@Args('id', { type: () => Int }) id: number) {
-    return this.reviewService.remove(id);
+  @UseGuards(JwtAuthGuard)
+  delete(
+    @Args('id', { type: () => Int }) id: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.reviewService.remove(id, user);
   }
 }

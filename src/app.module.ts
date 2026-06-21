@@ -44,7 +44,7 @@ import { OrderModule } from './modules/order/order.module';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'), // Tự động tạo file schema
       sortSchema: true, // Sắp xếp schema
-      playground: true, // Bật GraphQL Playground
+      playground: process.env.NODE_ENV !== 'production', // Bật GraphQL Playground chỉ khi không phải production
     }),
     ConfigModule.forRoot({
       isGlobal: true, // Làm cho ConfigModule có sẵn ở mọi nơi trong ứng dụng
