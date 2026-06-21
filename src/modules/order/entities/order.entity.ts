@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from 'src/modules/user/user.entity';
+import { ColumnNumericTransformer } from 'src/common/transformers/column-numeric.transformer';
 import type { OrderItem } from './order-item.entity';
 
 const OrderItemEntity = (): typeof OrderItem => require('./order-item.entity').OrderItem;
@@ -23,7 +24,11 @@ export class Order {
   @Column({ unique: true })
   stripeSessionId: string;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: ColumnNumericTransformer,
+  })
   total: number;
 
   @Column({ default: 'processing' })

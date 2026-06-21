@@ -9,6 +9,7 @@ import {
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
 import type { Cart } from './cart.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
+import { ColumnNumericTransformer } from 'src/common/transformers/column-numeric.transformer';
 
 const CartEntity = (): typeof Cart => require('./cart.entity').Cart;
 
@@ -31,8 +32,20 @@ export class CartItem {
   @Column()
   quantity: number;
 
+  @Field({ nullable: true })
+  @Column({ type: 'varchar', length: 128, default: '' })
+  color: string;
+
+  @Field({ nullable: true })
+  @Column({ type: 'varchar', length: 128, default: '' })
+  storage: string;
+
   @Field(() => Float)
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: ColumnNumericTransformer,
+  })
   price: number;
 
   @Field(() => CartEntity())

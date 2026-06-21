@@ -54,10 +54,7 @@ export class UserController {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const profile: Record<string, unknown> = { ...user };
-    delete profile.password;
-    delete profile.refreshToken;
-    return profile;
+    return user;
   }
 
   @Patch(':id')
@@ -79,9 +76,6 @@ export class UserController {
     if (!updatedUser) {
       throw new NotFoundException('User not found');
     }
-    const profile: Record<string, unknown> = { ...updatedUser };
-    delete profile.password;
-    delete profile.refreshToken;
-    return profile;
+    return updatedUser;
   }
 }

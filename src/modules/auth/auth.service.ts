@@ -6,7 +6,7 @@ import * as crypto from 'crypto';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 
 import { UserService } from '../user/user.service';
-import removeKeyObject from '../helpers';
+import { instanceToPlain } from 'class-transformer';
 import { LoginResponseDto } from './dto/auth.dto';
 import {
   getJwtAccessSecret,
@@ -40,7 +40,7 @@ export class AuthService {
     // Chỉ định rõ ràng selectPassword = true để lấy password hash từ DB phục vụ validate
     const user = await this.userService.findUserByEmail(email, true);
     if (user && (await bcrypt.compare(password, user.password))) {
-      return removeKeyObject(user, 'password');
+      return instanceToPlain(user) as Omit<LoginResponseDto, 'password'>;
     }
     return null;
   }
@@ -52,7 +52,7 @@ export class AuthService {
       return null;
     }
 
-    return removeKeyObject(user, 'password');
+    return instanceToPlain(user) as Omit<LoginResponseDto, 'password'>;
   }
 
   /*
@@ -193,6 +193,6 @@ export class AuthService {
     if (!user) {
       user = await this.userService.createUserWithRole('admin', adminEmail, 'admin123', UserRole.Admin);
     }
-    return removeKeyObject(user, 'password');
+    return instanceToPlain(user) as Omit<LoginResponseDto, 'password'>;
   }
 }

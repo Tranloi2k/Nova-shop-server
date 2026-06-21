@@ -20,12 +20,14 @@ export class CartResolver {
 
   @Mutation(() => Cart, { name: 'addToCart' })
   async addToCart(
-    @Args('productId') productId: number,
-    @Args('quantity') quantity: number,
+    @Args('productId', { type: () => Number }) productId: number,
+    @Args('quantity', { type: () => Number }) quantity: number,
+    @Args('color', { type: () => String, nullable: true }) color: string | undefined,
+    @Args('storage', { type: () => String, nullable: true }) storage: string | undefined,
     @Context() context: { req: { user: { id: number } } },
   ) {
     const userId = context.req.user.id;
-    const addToCartDto: AddToCartDto = { productId, quantity };
+    const addToCartDto: AddToCartDto = { productId, quantity, color, storage };
     const result = await this.cartService.addToCart(userId, addToCartDto);
     return result.cart;
   }

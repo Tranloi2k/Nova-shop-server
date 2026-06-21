@@ -97,6 +97,8 @@ export class OrderService {
             productImage: cartItem.product.image,
             price: cartItem.price,
             quantity: cartItem.quantity,
+            color: cartItem.color ?? '',
+            storage: cartItem.storage ?? '',
           });
           orderItems.push(orderItem);
         }
@@ -194,6 +196,8 @@ export class OrderService {
         image: item.productImage,
         price: Number(item.price),
         quantity: item.quantity,
+        color: item.color || undefined,
+        storage: item.storage || undefined,
       })),
     };
   }

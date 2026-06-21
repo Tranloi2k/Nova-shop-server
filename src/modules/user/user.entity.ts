@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ObjectType, Field } from '@nestjs/graphql';
+import { Exclude } from 'class-transformer';
 import type { Cart } from 'src/modules/cart/entities/cart.entity';
 import { UserRole } from './user-role.enum';
 
@@ -20,9 +21,11 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column({ select: false })
   password: string;
 
+  @Exclude()
   @Column()
   refreshToken: string;
 

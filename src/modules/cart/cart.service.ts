@@ -36,8 +36,66 @@ export class CartService {
     return cart;
   }
 
+  private assertQuantityWithinStock(
+    requestedQuantity: number,
+    product: Product,
+    productName?: string,
+  ): void {
+    if (requestedQuantity > product.stock) {
+      const label = productName ?? product.name;
+      throw new BadRequestException(
+        `Only ${product.stock} unit(s) of "${label}" available in stock`,
+      );
+    }
+  }
+
+  private normalizeVariant(value?: string): string {
+    return (value ?? '').trim();
+  }
+
+  private async assertProductStockForCart(
+    cartId: number,
+    product: Product,
+    requestedLineQuantity: number,
+    excludeCartItemId?: number,
+  ): Promise<void> {
+    const siblingItems = await this.cartItemRepository.find({
+      where: { cartId, productId: product.id },
+    });
+
+    const otherLinesQuantity = siblingItems
+      .filter((item) => item.id !== excludeCartItemId)
+      .reduce((sum, item) => sum + item.quantity, 0);
+
+    const totalForProduct = otherLinesQuantity + requestedLineQuantity;
+    this.assertQuantityWithinStock(totalForProduct, product);
+  }
+
+  private async findCartItemVariant(
+    cartId: number,
+    productId: number,
+    color: string,
+    storage: string,
+  ): Promise<CartItem | null> {
+    const exactMatch = await this.cartItemRepository.findOne({
+      where: { cartId, productId, color, storage },
+      relations: ['product'],
+    });
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // Upgrade a legacy row (pre-variant) instead of inserting a duplicate line.
+    return this.cartItemRepository.findOne({
+      where: { cartId, productId, color: '', storage: '' },
+      relations: ['product'],
+    });
+  }
+
   async addToCart(userId: number, addToCartDto: AddToCartDto): Promise<CartResponseDto> {
     const { productId, quantity } = addToCartDto;
+    const color = this.normalizeVariant(addToCartDto.color);
+    const storage = this.normalizeVariant(addToCartDto.storage);
 
     // Kiểm tra sản phẩm có tồn tại không
     const product = await this.productRepository.findOne({ where: { id: productId } });
@@ -48,15 +106,17 @@ export class CartService {
     // Lấy hoặc tạo cart của user
     const cart = await this.getOrCreateCart(userId);
 
-    // Kiểm tra xem sản phẩm đã có trong cart chưa
-    let cartItem = await this.cartItemRepository.findOne({
-      where: { cartId: cart.id, productId },
-      relations: ['product'],
-    });
+    // Kiểm tra xem variant đã có trong cart chưa (kể cả legacy row không variant)
+    let cartItem = await this.findCartItemVariant(cart.id, productId, color, storage);
+
+    const newQuantity = cartItem ? cartItem.quantity + quantity : quantity;
+    await this.assertProductStockForCart(cart.id, product, newQuantity, cartItem?.id);
 
     if (cartItem) {
-      // Nếu đã có, cập nhật số lượng
-      cartItem.quantity += quantity;
+      cartItem.quantity = newQuantity;
+      cartItem.color = color;
+      cartItem.storage = storage;
+      cartItem.price = product.price;
       await this.cartItemRepository.save(cartItem);
     } else {
       // Nếu chưa có, tạo mới
@@ -64,6 +124,8 @@ export class CartService {
         cartId: cart.id,
         productId,
         quantity,
+        color,
+        storage,
         price: product.price,
       });
       await this.cartItemRepository.save(cartItem);
@@ -97,8 +159,16 @@ export class CartService {
       throw new BadRequestException('Cart item does not belong to this user');
     }
 
+    await this.assertProductStockForCart(
+      cartItem.cartId,
+      cartItem.product,
+      quantity,
+      cartItem.id,
+    );
+
     // Cập nhật số lượng
     cartItem.quantity = quantity;
+    cartItem.price = cartItem.product.price;
     await this.cartItemRepository.save(cartItem);
 
     // Cập nhật tổng số lượng trong cart

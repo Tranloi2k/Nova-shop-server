@@ -14,6 +14,8 @@ const CATEGORY_KEYWORDS: Record<(typeof PRODUCT_CATEGORY_VALUES)[number], string
 };
 
 type ProductWithStats = Product & { rate: number; reviewCount: number };
+
+const MAX_PAGE_LIMIT = 100;
 // import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
@@ -125,8 +127,11 @@ export class ProductsService {
       limit = 10,
     } = queryDto || {};
 
+    const safeLimit = Math.min(Math.max(limit, 1), MAX_PAGE_LIMIT);
+    const safePage = Math.max(page, 1);
+
     const filterParams = { search, category, minPrice, maxPrice, onSale };
-    const skip = (page - 1) * limit;
+    const skip = (safePage - 1) * safeLimit;
 
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
@@ -171,20 +176,20 @@ export class ProductsService {
 
     // Thực hiện truy vấn phân trang trực tiếp từ Database
     const total = await queryBuilder.getCount();
-    const products = await queryBuilder.skip(skip).take(limit).getMany();
+    const products = await queryBuilder.skip(skip).take(safeLimit).getMany();
 
     // Map thêm thông tin ảo rate & reviewCount cho các sản phẩm đã phân trang
     const productsWithRating = this.mapProductsWithStats(products);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / safeLimit);
 
     const result = {
       products: productsWithRating,
       total,
-      page,
-      limit,
+      page: safePage,
+      limit: safeLimit,
       totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
+      hasNextPage: safePage < totalPages,
+      hasPrevPage: safePage > 1,
     };
 
     // Cache the result for 10 seconds to speed up consecutive requests (e.g., Lighthouse)

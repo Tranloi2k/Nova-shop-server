@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import type { Review } from 'src/modules/reviews/entities/review.entity';
+import { ColumnNumericTransformer } from 'src/common/transformers/column-numeric.transformer';
 
 const ReviewEntity = (): typeof Review =>
   require('../../reviews/entities/review.entity').Review;
@@ -37,7 +38,7 @@ export class Product {
   storageOptions: string;
 
   @Field(() => Int)
-  @Column('decimal')
+  @Column('decimal', { transformer: ColumnNumericTransformer })
   price: number;
 
   @Field(() => Int)

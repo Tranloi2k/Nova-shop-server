@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsPositive, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, MaxLength, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AddToCartDto {
@@ -16,4 +16,16 @@ export class AddToCartDto {
   @IsNumber()
   @Min(1)
   quantity: number;
+
+  @ApiPropertyOptional({ description: 'Selected color/finish', example: '#1a1a2e' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  color?: string;
+
+  @ApiPropertyOptional({ description: 'Selected storage option', example: '256GB' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  storage?: string;
 }

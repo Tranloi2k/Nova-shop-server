@@ -15,12 +15,14 @@ type Cart {
 type CartItem {
   cart: Cart!
   cartId: Int!
+  color: String
   createdAt: DateTime!
   id: Int!
   price: Float!
   product: Product!
   productId: Int!
   quantity: Int!
+  storage: String
   updatedAt: DateTime!
 }
 
@@ -42,7 +44,7 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Mutation {
-  addToCart(productId: Float!, quantity: Float!): Cart!
+  addToCart(color: String, productId: Float!, quantity: Float!, storage: String): Cart!
   clearCart: String!
   createProduct(createProductInput: CreateProductInput!): Product!
   createReview(createReviewInput: CreateReviewInput!): Review!
@@ -98,6 +100,13 @@ type User {
   carts: [Cart!]
   email: String!
   id: Float!
-  role: String!
+  role: UserRole!
   username: String!
+}
+
+"""User role in the system"""
+enum UserRole {
+  Admin
+  Customer
+  Staff
 }
