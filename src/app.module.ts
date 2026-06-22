@@ -14,6 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SignalingGateway } from './modules/videoCall/signaling.gateway';
 import { OrderModule } from './modules/order/order.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { StorefrontPostersModule } from './modules/storefront-posters/storefront-posters.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -66,6 +67,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     CartModule,
     OrderModule,
     AdminModule,
+    StorefrontPostersModule,
   ],
   controllers: [AppController],
   providers: [AppService, SignalingGateway],

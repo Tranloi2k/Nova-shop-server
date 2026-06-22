@@ -70,12 +70,19 @@ Install all required dependencies:
 npm install
 ```
 
-### 2. Run Database Migrations
+### 2. Bootstrap the database
 
-Set up the database tables using migrations:
+On a **fresh** PostgreSQL / Supabase project, run the single schema file:
+
 ```bash
-npm run migration:run
+psql "$DATABASE_URL" -f database/bootstrap.sql
 ```
+
+Or paste `database/bootstrap.sql` into the Supabase SQL Editor.
+
+> **Warning:** `bootstrap.sql` drops existing Nova Shop tables before recreating them. Do not run on production unless you intend to wipe data.
+
+TypeORM uses `synchronize: false` — schema changes must be applied via `database/bootstrap.sql` (fresh setup) or Supabase migrations (ongoing).
 
 ### 3. Start the Server
 
