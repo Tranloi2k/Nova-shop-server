@@ -13,18 +13,16 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    // async login(@Body() loginDto: LoginDto) {
-    console.log('Login DTO:----------------');
     const user = await this.authService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const token = await this.authService.login(user.username, user.id);
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('access_token', token.accessToken, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      secure: true,
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
     });
     return { message: 'Login successful', ...token };
   }

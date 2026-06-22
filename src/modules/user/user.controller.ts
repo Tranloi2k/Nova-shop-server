@@ -5,9 +5,7 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
-  UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -15,6 +13,8 @@ import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { ApiOperation, ApiResponse, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guard/jwt-auth.guard';
+import { OwnsResourceGuard } from '../guard/owns-resource.guard';
+import { OwnsResource } from '../auth/decorators/owns-resource.decorator';
 
 @ApiTags('user')
 @Controller('user')
@@ -40,16 +40,14 @@ export class UserController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OwnsResourceGuard)
+  @OwnsResource('id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved successfully.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async getProfile(@Param('id') id: string, @Req() req: { user: { id: number } }) {
-    if (Number(req.user.id) !== Number(id)) {
-      throw new UnauthorizedException('You can only access your own profile');
-    }
+  async getProfile(@Param('id') id: string) {
     const user = await this.userService.findUserById(Number(id));
     if (!user) {
       throw new NotFoundException('User not found');
@@ -58,7 +56,8 @@ export class UserController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OwnsResourceGuard)
+  @OwnsResource('id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user profile' })
   @ApiResponse({ status: 200, description: 'User profile updated successfully.' })
@@ -67,11 +66,7 @@ export class UserController {
   async updateProfile(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @Req() req: { user: { id: number } },
   ) {
-    if (Number(req.user.id) !== Number(id)) {
-      throw new UnauthorizedException('You can only update your own profile');
-    }
     const updatedUser = await this.userService.updateUserProfile(Number(id), updateUserDto);
     if (!updatedUser) {
       throw new NotFoundException('User not found');

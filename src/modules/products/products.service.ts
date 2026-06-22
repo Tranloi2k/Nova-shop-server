@@ -10,6 +10,8 @@ import { Review } from '../reviews/entities/review.entity';
 type ProductWithStats = Product & { rate: number; reviewCount: number };
 
 const MAX_PAGE_LIMIT = 100;
+const CACHE_TTL_MS = 10_000;
+const MAX_CACHE_ENTRIES = 100;
 // import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
@@ -20,6 +22,36 @@ export class ProductsService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
   ) {}
+
+  private getFromCache(cacheKey: string): PaginatedProductResponseDto | null {
+    const cached = this.productsCache.get(cacheKey);
+    if (!cached) {
+      return null;
+    }
+    if (cached.expiresAt <= Date.now()) {
+      this.productsCache.delete(cacheKey);
+      return null;
+    }
+    this.productsCache.delete(cacheKey);
+    this.productsCache.set(cacheKey, cached);
+    return cached.data;
+  }
+
+  private setCache(cacheKey: string, data: PaginatedProductResponseDto): void {
+    if (
+      this.productsCache.size >= MAX_CACHE_ENTRIES &&
+      !this.productsCache.has(cacheKey)
+    ) {
+      const oldestKey = this.productsCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.productsCache.delete(oldestKey);
+      }
+    }
+    this.productsCache.set(cacheKey, {
+      data,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+  }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const product = this.productRepository.create(createProductDto);
@@ -95,9 +127,9 @@ export class ProductsService {
 
   async findAll(queryDto?: QueryProductDto): Promise<PaginatedProductResponseDto> {
     const cacheKey = JSON.stringify(queryDto || {});
-    const cached = this.productsCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.data;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     const {
@@ -176,11 +208,7 @@ export class ProductsService {
       hasPrevPage: safePage > 1,
     };
 
-    // Cache the result for 10 seconds to speed up consecutive requests (e.g., Lighthouse)
-    this.productsCache.set(cacheKey, {
-      data: result,
-      expiresAt: Date.now() + 10000,
-    });
+    this.setCache(cacheKey, result);
 
     return result;
   }

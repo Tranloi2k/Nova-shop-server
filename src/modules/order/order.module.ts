@@ -8,11 +8,12 @@ import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { OrderWebhookController } from './order-webhook.controller';
 import { WebhookSecretGuard } from '../guard/webhook-secret.guard';
+import { OwnsResourceGuard } from '../guard/owns-resource.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderItem, Product]), CartModule],
   controllers: [OrderController, OrderWebhookController],
-  providers: [OrderService, WebhookSecretGuard],
+  providers: [OrderService, WebhookSecretGuard, OwnsResourceGuard],
   exports: [OrderService],
 })
 export class OrderModule {}
