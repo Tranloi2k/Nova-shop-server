@@ -1,8 +1,8 @@
 # NovaShop Backend (NestJS API)
 
-Welcome to the backend of **NovaShop**, a robust, high-performance, and secure e-commerce API built with **NestJS**, **TypeORM**, **GraphQL (Apollo)**, and **WebSockets**.
+Welcome to the backend of **NovaShop**, a robust, high-performance, and secure e-commerce API built with **NestJS**, **TypeORM**, and **GraphQL (Apollo)**.
 
-This project provides a comprehensive feature set for user authentication, product catalogs, cart management, checkout orders, and real-time WebRTC video calling.
+This project provides a comprehensive feature set for user authentication, product catalogs, cart management, and checkout orders.
 
 ---
 
@@ -12,7 +12,6 @@ This project provides a comprehensive feature set for user authentication, produ
 * **API Architectures:** Mixed **REST API** (with OpenAPI/Swagger documentation) & **GraphQL API** (Apollo Driver).
 * **Database & ORM:** PostgreSQL (Supabase) with [TypeORM](https://typeorm.io) for data persistence.
 * **Authentication:** JWT Access & Refresh Token rotation, Local authentication strategy (bcrypt), and Google OAuth2 integration.
-* **Real-time Signaling:** Socket.io WebSockets for WebRTC video call signaling.
 * **Linting & Formatting:** ESLint & Prettier.
 
 ---
@@ -40,9 +39,6 @@ This project provides a comprehensive feature set for user authentication, produ
 5. **`OrderModule`**
    - Handles checkout and order creation with full transactional safety (`DataSource.transaction`).
    - Idempotency guards using Stripe session IDs to prevent duplicate order generation.
-
-6. **`SignalingGateway` (WebSockets)**
-   - Manages real-time rooms and peer connection events for WebRTC video calling.
 
 ---
 
