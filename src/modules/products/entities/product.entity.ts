@@ -49,6 +49,10 @@ export class Product {
   @Column({ default: 100 })
   stock: number;
 
+  @Field()
+  @Column({ default: 'accessories' })
+  category: string;
+
   @Field({ nullable: true }) // Đánh dấu trường là một GraphQL Field (nếu cần)
   @Column({ type: 'text', nullable: true }) // Sử dụng kiểu text để lưu JSON dưới dạng chuỗi
   detailInformation: string;

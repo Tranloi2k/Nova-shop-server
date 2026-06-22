@@ -1,5 +1,8 @@
-import { IsString, IsNumber, IsNotEmpty, IsOptional, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, IsOptional, Min, Max, ValidateIf, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+const CLOUDINARY_IMAGE_URL_PATTERN =
+  /^https:\/\/res\.cloudinary\.com\/.+/i;
 
 export class AdminCreateProductDto {
   @ApiProperty({ description: 'The name of the product', example: 'iPhone 15 Pro Max' })
@@ -12,6 +15,11 @@ export class AdminCreateProductDto {
   @IsNotEmpty()
   description: string;
 
+  @ApiPropertyOptional({ description: 'The category of the product', example: 'smartphones' })
+  @IsString()
+  @IsOptional()
+  category?: string;
+
   @ApiProperty({ description: 'The price of the product', example: 1299 })
   @IsNumber()
   @Min(0)
@@ -23,8 +31,14 @@ export class AdminCreateProductDto {
   @Min(0)
   stock?: number;
 
-  @ApiPropertyOptional({ description: 'The primary image URL', example: 'https://example.com/image.jpg' })
-  @IsString()
+  @ApiPropertyOptional({
+    description: 'The primary image URL (Cloudinary CDN)',
+    example: 'https://res.cloudinary.com/demo/image/upload/v123/nova/products/iphone.jpg',
+  })
+  @ValidateIf((_, value) => value !== undefined && value !== '')
+  @Matches(CLOUDINARY_IMAGE_URL_PATTERN, {
+    message: 'image must be a Cloudinary HTTPS URL (https://res.cloudinary.com/...)',
+  })
   @IsOptional()
   image?: string;
 
@@ -67,6 +81,11 @@ export class AdminUpdateProductDto {
   @IsOptional()
   description?: string;
 
+  @ApiPropertyOptional({ description: 'The category of the product' })
+  @IsString()
+  @IsOptional()
+  category?: string;
+
   @ApiPropertyOptional({ description: 'The price of the product' })
   @IsNumber()
   @IsOptional()
@@ -79,8 +98,14 @@ export class AdminUpdateProductDto {
   @Min(0)
   stock?: number;
 
-  @ApiPropertyOptional({ description: 'The primary image URL' })
-  @IsString()
+  @ApiPropertyOptional({
+    description: 'The primary image URL (Cloudinary CDN)',
+    example: 'https://res.cloudinary.com/demo/image/upload/v123/nova/products/iphone.jpg',
+  })
+  @ValidateIf((_, value) => value !== undefined && value !== '')
+  @Matches(CLOUDINARY_IMAGE_URL_PATTERN, {
+    message: 'image must be a Cloudinary HTTPS URL (https://res.cloudinary.com/...)',
+  })
   @IsOptional()
   image?: string;
 

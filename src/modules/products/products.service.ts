@@ -7,12 +7,6 @@ import { PaginatedProductResponseDto } from './dto/paginated-product-response.dt
 import { Product } from './entities/product.entity';
 import { Review } from '../reviews/entities/review.entity';
 
-const CATEGORY_KEYWORDS: Record<(typeof PRODUCT_CATEGORY_VALUES)[number], string[]> = {
-  smartphones: ['iphone', 'galaxy', 'pixel', 'phone', 'smartphone', 'oneplus', 'xiaomi'],
-  tablets: ['ipad', 'tablet', ' tab', 'surface pro'],
-  wearables: ['watch', 'airpods', 'buds', 'wearable', 'fitbit', 'earbuds', 'headphone'],
-};
-
 type ProductWithStats = Product & { rate: number; reviewCount: number };
 
 const MAX_PAGE_LIMIT = 100;
@@ -50,18 +44,8 @@ export class ProductsService {
       });
     }
 
-    if (category && CATEGORY_KEYWORDS[category as keyof typeof CATEGORY_KEYWORDS]) {
-      const keywords = CATEGORY_KEYWORDS[category as keyof typeof CATEGORY_KEYWORDS];
-      const categoryConditions = keywords
-        .map(
-          (_, index) =>
-            `(LOWER(product.name) LIKE :cat${index} OR LOWER(product.description) LIKE :cat${index})`,
-        )
-        .join(' OR ');
-      const categoryParams = Object.fromEntries(
-        keywords.map((keyword, index) => [`cat${index}`, `%${keyword}%`]),
-      );
-      queryBuilder.andWhere(`(${categoryConditions})`, categoryParams);
+    if (category && (PRODUCT_CATEGORY_VALUES as readonly string[]).includes(category)) {
+      queryBuilder.andWhere('product.category = :category', { category });
     }
 
     if (minPrice !== undefined && !Number.isNaN(minPrice)) {

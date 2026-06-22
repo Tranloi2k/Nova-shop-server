@@ -30,6 +30,12 @@ export class AdminService {
     limit = 10,
     search?: string,
     lowStockThreshold?: number,
+    category?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    onSale?: string,
+    sort?: string,
+    stockStatus?: string,
   ) {
     const queryBuilder = this.productRepository.createQueryBuilder('product');
     const skip = (page - 1) * limit;
@@ -40,11 +46,63 @@ export class AdminService {
       });
     }
 
-    if (lowStockThreshold !== undefined) {
+    if (category?.trim()) {
+      queryBuilder.andWhere('product.category = :category', { category: category.trim() });
+    }
+
+    if (minPrice !== undefined && !Number.isNaN(minPrice)) {
+      queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
+    }
+
+    if (maxPrice !== undefined && !Number.isNaN(maxPrice)) {
+      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
+    }
+
+    if (onSale === 'true') {
+      queryBuilder.andWhere('product.discount > 0');
+    } else if (onSale === 'false') {
+      queryBuilder.andWhere('(product.discount = 0 OR product.discount IS NULL)');
+    }
+
+    const threshold = lowStockThreshold !== undefined ? lowStockThreshold : 15;
+    if (stockStatus === 'low-stock') {
+      queryBuilder.andWhere('product.stock > 0 AND product.stock <= :threshold', { threshold });
+    } else if (stockStatus === 'out-of-stock') {
+      queryBuilder.andWhere('product.stock = 0');
+    } else if (stockStatus === 'in-stock') {
+      queryBuilder.andWhere('product.stock > :threshold', { threshold });
+    } else if (lowStockThreshold !== undefined) {
       queryBuilder.andWhere('product.stock <= :lowStockThreshold', { lowStockThreshold });
     }
 
-    queryBuilder.orderBy('product.id', 'DESC');
+    if (sort) {
+      switch (sort) {
+        case 'price-low':
+          queryBuilder.orderBy('product.price', 'ASC').addOrderBy('product.id', 'DESC');
+          break;
+        case 'price-high':
+          queryBuilder.orderBy('product.price', 'DESC').addOrderBy('product.id', 'DESC');
+          break;
+        case 'stock-low':
+          queryBuilder.orderBy('product.stock', 'ASC').addOrderBy('product.id', 'DESC');
+          break;
+        case 'stock-high':
+          queryBuilder.orderBy('product.stock', 'DESC').addOrderBy('product.id', 'DESC');
+          break;
+        case 'name-asc':
+          queryBuilder.orderBy('product.name', 'ASC').addOrderBy('product.id', 'DESC');
+          break;
+        case 'name-desc':
+          queryBuilder.orderBy('product.name', 'DESC').addOrderBy('product.id', 'DESC');
+          break;
+        case 'newest':
+        default:
+          queryBuilder.orderBy('product.id', 'DESC');
+          break;
+      }
+    } else {
+      queryBuilder.orderBy('product.id', 'DESC');
+    }
 
     const [products, total] = await queryBuilder.skip(skip).take(limit).getManyAndCount();
     const totalPages = Math.ceil(total / limit);

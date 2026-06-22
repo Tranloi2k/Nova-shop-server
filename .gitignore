@@ -63,3 +63,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # CodeGraph local index (regenerate with `codegraph init -i`)
 .codegraph/
+
+# Deprecated local product uploads (images are stored on Cloudinary)
+/uploads
