@@ -4,6 +4,11 @@ Welcome to the backend of **NovaShop**, a robust, high-performance, and secure e
 
 This project provides a comprehensive feature set for user authentication, product catalogs, cart management, and checkout orders.
 
+**Related repositories**
+
+- Frontend (Next.js): [nova-online-shopping-nextjs](https://github.com/Tranloi2k/nextjs-dashboard)
+- Live storefront: [nova-online-shopping.vercel.app](https://nova-online-shopping.vercel.app/)
+
 ---
 
 ## 🛠️ Tech Stack & Key Technologies
@@ -59,10 +64,11 @@ GOOGLE_CLIENT_ID=your_google_client_id
 
 ## 🚀 Getting Started
 
-### 1. Installation
+### 1. Clone & install
 
-Install all required dependencies:
 ```bash
+git clone https://github.com/Tranloi2k/nestjs-app.git Nova-shop-Nestjs
+cd Nova-shop-Nestjs
 npm install
 ```
 
@@ -109,3 +115,12 @@ npm run test
 # Run e2e tests
 npm run test:e2e
 ```
+
+---
+
+## 👨‍💻 Author
+
+**Tran Loi**
+
+- GitHub: [@Tranloi2k](https://github.com/Tranloi2k)
+- Email: tranloi20001007@gmail.com
