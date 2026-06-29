@@ -10,6 +10,7 @@ import { ReviewModule } from './modules/reviews/reviews.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { CartModule } from './modules/cart/cart.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrderModule } from './modules/order/order.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -64,6 +65,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     UserModule,
     CartModule,
+    WishlistModule,
     OrderModule,
     AdminModule,
     StorefrontPostersModule,

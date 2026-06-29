@@ -13,6 +13,7 @@
 BEGIN;
 
 -- Drop in FK-safe order
+DROP TABLE IF EXISTS wishlist_items CASCADE;
 DROP TABLE IF EXISTS storefront_posters CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
@@ -161,6 +162,27 @@ CREATE TABLE order_items (
 CREATE INDEX idx_order_items_order_id ON order_items ("orderId");
 
 -- -----------------------------------------------------------------------------
+-- wishlist_items
+-- -----------------------------------------------------------------------------
+CREATE TABLE wishlist_items (
+  id          SERIAL PRIMARY KEY,
+  "userId"    INTEGER NOT NULL,
+  "productId" INTEGER NOT NULL,
+  "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_wishlist_items_users
+    FOREIGN KEY ("userId") REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_wishlist_items_products
+    FOREIGN KEY ("productId") REFERENCES "Products"(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE UNIQUE INDEX wishlist_items_user_product_unique
+  ON wishlist_items ("userId", "productId");
+
+CREATE INDEX idx_wishlist_items_user_id ON wishlist_items ("userId");
+
+-- -----------------------------------------------------------------------------
 -- storefront_posters (home page promo carousel)
 -- -----------------------------------------------------------------------------
 CREATE TABLE storefront_posters (
@@ -191,6 +213,7 @@ ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wishlist_items ENABLE ROW LEVEL SECURITY;
 -- storefront_posters: RLS off in production — enable + add policies if using Supabase client directly:
 -- ALTER TABLE storefront_posters ENABLE ROW LEVEL SECURITY;
 
